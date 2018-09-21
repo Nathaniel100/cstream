@@ -99,7 +99,38 @@ int main() {
   printf("Read last 10: %s\n", buffer); // 2个World
 
   stream_close(stream);
+
+  // copy
+  stream_t *stream_src = stream_file_open("tmp", O_RDONLY, 0644);
+  if (!stream_src) {
+    fprintf(stderr, "open error: %s\n", strerror(errno));
+    return 1;
+  }
+  stream_t *stream_dest = stream_file_open("dest", O_RDWR | O_CREAT, 0644);
+  if (!stream_dest) {
+    fprintf(stderr, "open error: %s\n", strerror(errno));
+    return 1;
+  }
+  nread = 0;
+  nwrote = 0;
+  if (!stream_copy(stream_src, stream_dest, 100, &nread, &nwrote)) {
+    fprintf(stderr, "copy error: %s\n", strerror(errno));
+    return 1;
+  }
+
+  // 需要rewind stream_dest，然后再读
+  stream_rewind(stream_dest);
+  memset(buffer, 0, sizeof(buffer));
+  if (!stream_read(stream_dest, buffer, sizeof(buffer), &nread)) {
+    fprintf(stderr, "error: %s\n", strerror(errno));
+    return 1;
+  }
+  printf("Read dest: %s\n", buffer); // 2个World
+  stream_close(stream_src);
+  stream_close(stream_dest);
+
   // 移除文件
   remove("tmp");
+  remove("dest");
   return 0;
 }

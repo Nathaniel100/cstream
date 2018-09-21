@@ -52,7 +52,7 @@ bool stream_rewind(stream_t *stream);
 
 /// 复制src流到dest流中
 bool stream_copy(stream_t *src, stream_t *dest, uint64_t num_bytes,
-                 uint64_t *nread, uint64_t nwrote);
+                 uint64_t *nread, uint64_t *nwrote);
 
 /// 错误码
 int stream_errno(stream_t *stream);
