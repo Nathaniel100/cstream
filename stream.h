@@ -55,7 +55,7 @@ bool stream_copy(stream_t *src, stream_t *dest, uint64_t num_bytes,
                  uint64_t *nread, uint64_t nwrote);
 
 /// 错误码
-inline int stream_errno(stream_t *stream);
+int stream_errno(stream_t *stream);
 
 #ifdef __cplusplus
 }

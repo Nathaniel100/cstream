@@ -139,6 +139,19 @@ stream_t *stream_file_open(const char *filename, int oflags, int mode) {
   return stream;
 }
 
+/// 关闭流
+bool stream_close(stream_t *stream) {
+  if (!stream_flush(stream)) {
+    return false;
+  }
+  if (!stream->funcs->close(stream)) {
+    errno = stream_errno(stream);
+    return false;
+  }
+  stream_destory(stream);
+  return true;
+}
+
 /// 读取流数据到指定的内存buffer中
 bool stream_read(stream_t *stream, void *buf, uint64_t count, uint64_t *nread) {
   if (!stream_flush(stream)) {
@@ -304,6 +317,6 @@ bool stream_flush(stream_t *stream) {
   return true;
 }
 
-inline int stream_errno(stream_t *stream) {
+int stream_errno(stream_t *stream) {
   return stream->last_error;
 }
