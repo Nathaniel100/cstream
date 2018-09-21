@@ -45,7 +45,8 @@
 #define UNLIKELY(x) (x)
 #endif
 
-#if HAS_BUILTIN(__builtin_offsetof) || (defined(__GNUC__) && !defined(__clang__))
+#if HAS_BUILTIN(__builtin_offsetof) || \
+    (defined(__GNUC__) && !defined(__clang__))
 #define OFFSET_OF(type, field) __builtin_offsetof(type, field)
 #else
 #define OFFSET_OF(type, field) ((size_t)(&((type *)0)->field))
@@ -79,7 +80,7 @@
 #elif defined(_WIN32)
 #define IS_LITTLE_ENDIAN 1
 #else
-#error "absl endian detection needs to be set up for your compiler"
+#error "endian detection needs to be set up for your compiler"
 #endif
 
 #endif

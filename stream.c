@@ -113,13 +113,6 @@ static stream_t *stream_make(const struct stream_funcs *funcs, void *cookie,
   return stream;
 }
 
-static void stream_destory(stream_t *stream) {
-  stream->buffer = NULL;
-  stream->funcs = NULL;
-  stream->cookie = NULL;
-  free(stream);
-}
-
 /// 根据已打开的文件fd打开流
 stream_t *stream_fd_open(int fd, int sflags, uint64_t bufsize) {
   return stream_make(&stream_funcs_fd, INT2VOIDPTR(fd), bufsize);
@@ -148,7 +141,7 @@ bool stream_close(stream_t *stream) {
     errno = stream_errno(stream);
     return false;
   }
-  stream_destory(stream);
+  free(stream);
   return true;
 }
 
@@ -305,6 +298,26 @@ bool stream_write(stream_t *stream, const void *buf, uint64_t count,
   return do_write(stream, buf, count, nwrote);
 }
 
+/// 通过分散-聚集(scatter-gather)接口方式写入流
+bool stream_writev(stream_t *stream, const struct iovec *iov, int iovcnt,
+                   uint64_t *nwrote) {
+  uint64_t res = 0;
+  stream->last_error = 0;
+  for (int i = 0; i < iovcnt; i++) {
+    uint64_t n = 0;
+    if (!do_write(stream, iov[i].iov_base, iov[i].iov_len, &n)) {
+      if (res == 0) {
+        return false;
+      }
+      if (nwrote) *nwrote = res;
+      return true;
+    }
+    res += n;
+  }
+  if (nwrote) *nwrote = res;
+  return true;
+}
+
 /// 刷新流
 bool stream_flush(stream_t *stream) {
   if (stream->wpos > stream->wbase) {
@@ -316,6 +329,29 @@ bool stream_flush(stream_t *stream) {
   }
   return true;
 }
+
+/// 设置流当前读写的位置
+bool stream_seek(stream_t *stream, int64_t delta, int whence, uint64_t *newpos) {
+  if (!stream_flush(stream)) {
+    return false;
+  }
+  stream->last_error = 0;
+  if (whence == SEEK_CUR) {
+     // 如果是读模式，当前的文件已多读了缓存的部分, 需要先减去
+    delta -= (stream->rend - stream->rpos);
+  }
+  stream->rpos = stream->rend = 0;
+  return stream->funcs->seek(stream, delta, whence, newpos);
+}
+
+/// 将流当前读写位置设置为起始
+bool stream_rewind(stream_t *stream) {
+  return stream_seek(stream, SEEK_SET, 0, 0);
+}
+
+/// 复制src流到dest流中
+bool stream_copy(stream_t *src, stream_t *dest, uint64_t num_bytes,
+                 uint64_t *nread, uint64_t nwrote);
 
 int stream_errno(stream_t *stream) {
   return stream->last_error;

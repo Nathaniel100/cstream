@@ -45,7 +45,7 @@ int stream_printf(stream_t *stream, const char *fmt, ...);
 bool stream_flush(stream_t *stream);
 
 /// 设置流当前读写的位置
-bool stream_seek(stream_t *stream, int delta, int whence, uint64_t *newpos);
+bool stream_seek(stream_t *stream, int64_t delta, int whence, uint64_t *newpos);
 
 /// 将流当前读写位置设置为起始
 bool stream_rewind(stream_t *stream);
