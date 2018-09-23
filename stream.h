@@ -35,12 +35,6 @@ bool stream_write(stream_t *stream, const void *buf, uint64_t count,
 bool stream_writev(stream_t *stream, const struct iovec *iov, int iovcnt,
                    uint64_t *nwrote);
 
-/// 将格式化数据写入流中
-int stream_vprintf(stream_t *stream, const char *fmt, va_list ap);
-
-/// 将格式化数据写入流中
-int stream_printf(stream_t *stream, const char *fmt, ...);
-
 /// 刷新流
 bool stream_flush(stream_t *stream);
 
